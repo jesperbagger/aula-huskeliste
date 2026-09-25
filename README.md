@@ -154,6 +154,7 @@ Se [docs/fejlsoegning.md](docs/fejlsoegning.md). Den dækker de fejl, man typisk
 
 - [Casper Juel](https://github.com/Casperjuel) for [aula-mcp](https://github.com/Casperjuel/aula-mcp) (MIT), som gør det hele muligt.
 - [scaarup/aula](https://github.com/scaarup/aula), som aula-mcp bygger videre på.
+- [Alexander Høier](https://github.com/A-Hoier) for idéen og inspirationen fra [Aula-AI.d](https://github.com/A-Hoier/Aula-AI.d).
 
 ## Licens
 
