@@ -1,0 +1,467 @@
+<title>Aula-huskeliste</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&family=Kalam:wght@700&display=swap">
+<style>
+  :root {
+    --paper: #F5F8FB;
+    --sheet: #FFFFFF;
+    --ink: #17202B;
+    --muted: #566273;
+    --rule: #D5DFEA;
+    --margin-line: #9FB7D6;
+    --accent: #1D5BBF;
+    --accent-ink: #FFFFFF;
+    --marker: #FFE27A;
+    --marker-ink: #17202B;
+    --code-bg: #EAF0F6;
+    --code-ink: #16324F;
+    --warn-bg: #FFF6D6;
+    --warn-line: #E8C24A;
+    --shadow: 0 1px 2px rgba(23, 32, 43, .06), 0 8px 24px rgba(23, 32, 43, .07);
+    --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+    --font-hand: "Kalam", "Comic Sans MS", cursive;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #10151C;
+      --sheet: #171E27;
+      --ink: #E5EBF2;
+      --muted: #9AA7B6;
+      --rule: #263241;
+      --margin-line: #3B5577;
+      --accent: #8FB4F5;
+      --accent-ink: #0E1520;
+      --marker: #6B5A17;
+      --marker-ink: #FFF3C4;
+      --code-bg: #1C2633;
+      --code-ink: #CFE0F5;
+      --warn-bg: #2A2512;
+      --warn-line: #8C7424;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #10151C;
+    --sheet: #171E27;
+    --ink: #E5EBF2;
+    --muted: #9AA7B6;
+    --rule: #263241;
+    --margin-line: #3B5577;
+    --accent: #8FB4F5;
+    --accent-ink: #0E1520;
+    --marker: #6B5A17;
+    --marker-ink: #FFF3C4;
+    --code-bg: #1C2633;
+    --code-ink: #CFE0F5;
+    --warn-bg: #2A2512;
+    --warn-line: #8C7424;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.6;
+    padding-inline: 20px;
+  }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  mark { background: var(--marker); color: var(--marker-ink); padding: 0 .15em; border-radius: 2px; }
+  code { font-family: var(--font-mono); font-size: .86em; background: var(--code-bg); color: var(--code-ink); padding: .1em .35em; border-radius: 4px; }
+
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 18px; }
+  .wordmark { font-family: var(--font-display); font-weight: 800; font-size: 19px; letter-spacing: -.01em; color: var(--ink); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .wordmark svg { flex: none; }
+  .topbar nav { display: flex; gap: 18px; font-size: 15px; flex-wrap: wrap; }
+  .topbar nav a { color: var(--muted); text-decoration: none; }
+  .topbar nav a:hover { color: var(--ink); }
+
+  /* Hero */
+  .hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 48px; align-items: center; padding-block: 36px 56px; }
+  .hero h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(34px, 5vw, 54px); line-height: 1.05; letter-spacing: -.025em; margin: 0 0 18px; text-wrap: balance; }
+  .lead { font-size: 19px; color: var(--muted); margin: 0 0 26px; max-width: 34em; }
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; font: 700 16px/1 var(--font-body); padding: 14px 20px; border-radius: 10px; text-decoration: none; border: 2px solid var(--accent); cursor: pointer; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-ghost { background: transparent; color: var(--accent); }
+  .disclaimer { margin: 22px 0 0; font-size: 14px; color: var(--muted); max-width: 36em; }
+
+  /* The note from the school bag */
+  .note {
+    position: relative;
+    background:
+      linear-gradient(90deg, transparent 38px, var(--margin-line) 38px, var(--margin-line) 40px, transparent 40px),
+      repeating-linear-gradient(180deg, var(--sheet) 0 29px, var(--rule) 29px 30px);
+    background-color: var(--sheet);
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+    padding: 22px 22px 26px 56px;
+    transform: rotate(1.2deg);
+    font-size: 15.5px;
+    line-height: 30px;
+  }
+  .note::before {
+    content: "Husk!";
+    position: absolute; top: -16px; right: 18px;
+    font-family: var(--font-hand); font-size: 26px; color: var(--accent);
+    transform: rotate(-6deg);
+  }
+  .note .subject { font-weight: 700; margin: 0; }
+  .note .meta { color: var(--muted); font-size: 13px; margin: 0 0 6px; }
+  .note h3 { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 8px 0 0; line-height: 30px; }
+  .note ul { list-style: none; margin: 0; padding: 0; }
+  .note li::before { content: "– "; color: var(--muted); }
+  .note .child { font-weight: 700; margin: 0; }
+  .note .tag { font-size: 12.5px; color: var(--accent); white-space: nowrap; }
+
+  /* Sections */
+  section { padding-block: 44px; border-top: 1px solid var(--rule); }
+  h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(26px, 3.4vw, 34px); letter-spacing: -.02em; line-height: 1.15; margin: 0 0 14px; text-wrap: balance; }
+  h3 { font-family: var(--font-display); font-weight: 600; font-size: 20px; margin: 26px 0 8px; letter-spacing: -.01em; }
+  .prose { max-width: 42em; }
+  .prose p { margin: 0 0 14px; }
+
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; margin-top: 22px; }
+  .flow .node { flex: 1 1 170px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; }
+  .flow .node b { display: block; font-family: var(--font-display); font-size: 17px; }
+  .flow .node span { font-size: 14.5px; color: var(--muted); }
+  .flow .arrow { align-self: center; color: var(--muted); font-size: 22px; flex: none; }
+
+  .needs { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0 32px; margin: 18px 0 0; }
+  .needs div { padding-block: 12px; border-bottom: 1px solid var(--rule); }
+  .needs dt { font-weight: 700; }
+  .needs dd { margin: 2px 0 0; color: var(--muted); font-size: 15.5px; }
+
+  /* OS switch */
+  .os-switch { display: inline-flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--code-bg); margin: 8px 0 0; }
+  .os-switch button { font: 700 15px/1 var(--font-body); border: 0; background: transparent; color: var(--muted); padding: 10px 16px; border-radius: 9px; cursor: pointer; }
+  .os-switch button[aria-pressed="true"] { background: var(--sheet); color: var(--ink); box-shadow: var(--shadow); }
+  [data-os="win"] .only-mac, [data-os="mac"] .only-win { display: none; }
+
+  /* Steps: numbers sit in the notebook margin */
+  .steps { counter-reset: step; }
+  .step { position: relative; padding: 34px 0 34px 96px; border-top: 1px dashed var(--rule); }
+  .step:first-of-type { border-top: 0; }
+  .step::before {
+    content: ""; position: absolute; left: 72px; top: 0; bottom: 0; width: 2px; background: var(--margin-line); opacity: .7;
+  }
+  .step .num {
+    position: absolute; left: 0; top: 30px; width: 60px; text-align: right;
+    font-family: var(--font-display); font-weight: 800; font-size: 44px; line-height: 1; color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .step h3 { margin-top: 0; font-size: 23px; font-weight: 800; }
+  .step .time { font-size: 13.5px; color: var(--muted); font-weight: 400; font-family: var(--font-body); margin-left: 8px; white-space: nowrap; }
+  .step ol, .step ul { padding-left: 1.3em; margin: 8px 0 14px; max-width: 42em; }
+  .step li { margin: 4px 0; }
+  .step p { max-width: 42em; margin: 0 0 12px; }
+
+  .cmd { margin: 12px 0 16px; max-width: 46em; }
+  .cmd .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 6px; }
+  .cmd pre {
+    margin: 0; background: var(--code-bg); color: var(--code-ink); border-radius: 10px;
+    padding: 14px 16px; font: 14px/1.55 var(--font-mono); overflow-x: auto; white-space: pre;
+  }
+  .cmd .label { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .copy {
+    flex: none; font: 700 13px/1 var(--font-body);
+    background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 12px; cursor: pointer;
+  }
+  .copy.done { color: var(--accent); border-color: var(--accent); }
+
+  .callout { background: var(--warn-bg); border-left: 4px solid var(--warn-line); border-radius: 6px; padding: 12px 16px; margin: 14px 0; max-width: 42em; font-size: 15.5px; }
+  .fields { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 10px 0 14px; font-size: 15.5px; max-width: 42em; }
+  .fields dt { font-weight: 700; }
+  .fields dd { margin: 0; color: var(--muted); }
+
+  .table-wrap { overflow-x: auto; max-width: 52em; }
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; }
+  th, td { text-align: left; vertical-align: top; padding: 11px 12px 11px 0; border-bottom: 1px solid var(--rule); }
+  th { font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; }
+  .cols ul { padding-left: 1.2em; margin: 8px 0 0; }
+  .cols li { margin: 6px 0; }
+
+  footer { border-top: 1px solid var(--rule); padding-block: 28px 44px; font-size: 14.5px; color: var(--muted); }
+  footer p { margin: 0 0 8px; max-width: 52em; }
+
+  @media (max-width: 820px) {
+    .hero { grid-template-columns: 1fr; gap: 40px; padding-block: 20px 44px; }
+    .note { transform: none; }
+    .topbar nav { display: none; }
+  }
+  @media (max-width: 560px) {
+    body { font-size: 16px; padding-inline: 16px; }
+    .step { padding: 28px 0; }
+    .step::before { display: none; }
+    .step .num { position: static; display: block; width: auto; text-align: left; font-size: 34px; margin-bottom: 6px; }
+    .flow .arrow { transform: rotate(90deg); width: 100%; text-align: center; }
+    .fields { grid-template-columns: 1fr; gap: 0; }
+    .fields dd { margin-bottom: 8px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .copy { transition: color .15s, border-color .15s; }
+  }
+</style>
+
+<div class="wrap" id="top" data-os="win">
+  <header class="topbar">
+    <a class="wordmark" href="#top">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="3" y="2" width="20" height="22" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9h10M8 13h10M8 17h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6.5 2v22" stroke="#1D5BBF" stroke-width="1.5" opacity=".6"/></svg>
+      Aula-huskeliste
+    </a>
+    <nav aria-label="Genveje">
+      <a href="#saadan">Sådan virker det</a>
+      <a href="#trin">Opsætning</a>
+      <a href="#privatliv">Privatliv</a>
+      <a href="https://github.com/jesperbagger/aula-huskeliste">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div>
+      <h1>Vid hver aften, hvad børnene skal huske i morgen.</h1>
+      <p class="lead">Aula-huskeliste læser beskeder, opslag og kalender i Aula og sender dig en kort mail kl.&nbsp;19.30. Nye arrangementer lander i Google-kalenderen, og skriver læreren i kontaktbogen, ved du det, før du henter.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#trin">Sæt det op</a>
+        <a class="btn btn-ghost" href="https://github.com/jesperbagger/aula-huskeliste">Se koden på GitHub</a>
+      </div>
+      <p class="disclaimer">Et gratis fritidsprojekt fra en forælder. Det er ikke lavet af eller godkendt af Aula, KL, STIL eller Netcompany.</p>
+    </div>
+
+    <figure class="note" aria-label="Eksempel på en aftenmail">
+      <p class="subject">Husk til i morgen – torsdag d. 24. september</p>
+      <p class="meta">Fra din huskeliste · kl. 19.30</p>
+      <h3>I morgen</h3>
+      <p class="child">Emma (2.B)</p>
+      <ul>
+        <li>Idrætstøj – idræt i hallen 1.–2. lektion</li>
+        <li>Seddel om skolefoto kommer med hjem i postmappen</li>
+      </ul>
+      <p class="child">Noah (Solsikken)</p>
+      <ul>
+        <li>Cykeldag – husk cykel og cykelhjelm</li>
+      </ul>
+      <h3>Kommende</h3>
+      <ul>
+        <li>Fre 25/9: bålhygge med varm kakao ved afhentning <span class="tag">i kalenderen</span></li>
+        <li>Tors 8/10: skolefoto for 2.B <span class="tag">i kalenderen</span></li>
+      </ul>
+    </figure>
+  </div>
+
+  <section id="saadan">
+    <h2>Sådan virker det</h2>
+    <div class="prose">
+      <p>Du får din egen lille server, som taler med Aula på dine vegne. To gange om dagen læser Claude det nye og skriver en huskeliste med kun det, der kræver noget af dig. Er der ikke noget, hører du ingenting.</p>
+    </div>
+    <div class="flow" role="list">
+      <div class="node" role="listitem"><b>Aula</b><span>Beskeder, opslag, kalender og kontaktbog</span></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="node" role="listitem"><b>Din egen server</b><span>Gratis hos Oracle. Kører det åbne projekt aula-mcp med dit MitID-login</span></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="node" role="listitem"><b>Claude</b><span>Planlagte opgaver kl. 15.00 og 19.30 finder huskepunkterne</span></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="node" role="listitem"><b>Mail og kalender</b><span>Huskeliste i indbakken, arrangementer i Google-kalenderen</span></div>
+    </div>
+  </section>
+
+  <section id="behov">
+    <h2>Det skal du bruge</h2>
+    <dl class="needs">
+      <div><dt>Ca. 1 time</dt><dd>Første gang. Bagefter kører det af sig selv.</dd></div>
+      <div><dt>En computer på dit hjemmenetværk</dt><dd>Windows 10/11 eller Mac med macOS 13 eller nyere. Aula blokerer MitID-login fra VPN og servere.</dd></div>
+      <div><dt>MitID-appen</dt><dd>Den samme, som du logger ind på Aula med.</dd></div>
+      <div><dt>En gratis Oracle Cloud-konto</dt><dd>Always Free. Kræver et betalingskort til verifikation.</dd></div>
+      <div><dt>Et betalt Claude-abonnement</dt><dd>Med Cowork, planlagte opgaver og custom connectors. Tjek på claude.ai, hvilke abonnementer der har det.</dd></div>
+      <div><dt>Gmail og Google Kalender</dt><dd>Forbundet i Claude under Indstillinger → Connectors.</dd></div>
+    </dl>
+  </section>
+
+  <section id="trin">
+    <h2>Opsætning i fem trin</h2>
+    <div class="prose"><p>Vælg din computer, så viser vejledningen de rigtige kommandoer.</p></div>
+    <div class="os-switch" role="group" aria-label="Vælg computer">
+      <button type="button" id="os-win" data-os-btn="win" aria-pressed="true">Windows</button>
+      <button type="button" id="os-mac" data-os-btn="mac" aria-pressed="false">Mac</button>
+    </div>
+
+    <div class="steps">
+      <article class="step" id="trin-1">
+        <div class="num" aria-hidden="true">1</div>
+        <h3>Opret en gratis server hos Oracle <span class="time">ca. 20 min</span></h3>
+        <ol>
+          <li>Opret en konto på <a href="https://www.oracle.com/cloud/free/">oracle.com/cloud/free</a>. Vælg en hjemmeregion i nærheden, fx <em>Sweden Central</em> eller <em>Germany Central</em>. Den kan ikke ændres senere.</li>
+          <li>Gå til <b>Compute → Instances → Create instance</b>. Vælg image <b>Canonical Ubuntu 24.04</b> og shape <b>VM.Standard.E2.1.Micro</b> (mærket Always Free).</li>
+          <li>Under SSH keys: vælg <b>Generate a key pair for me</b> og tryk <b>Save private key</b>. <mark>Gem filen godt</mark>, for uden den kan du ikke komme ind på serveren.</li>
+          <li>Skriv maskinens <b>offentlige IP-adresse</b> ned.</li>
+          <li>Åbn <b>port 80 og 443</b> i netværkets <em>Security List</em> (Source <code>0.0.0.0/0</code>, TCP).</li>
+        </ol>
+        <p>Vejledning med alle klik og løsninger på typiske problemer: <a href="https://github.com/jesperbagger/aula-huskeliste/blob/main/docs/1-oracle-server.md">docs/1-oracle-server.md</a></p>
+      </article>
+
+      <article class="step" id="trin-2">
+        <div class="num" aria-hidden="true">2</div>
+        <h3>Installer serveren <span class="time">ca. 5 min</span></h3>
+        <p class="only-win">Åbn <b>PowerShell</b> og log ind på serveren. Ret filnavnet og IP-adressen til dine egne:</p>
+        <p class="only-mac">Åbn <b>Terminal</b> og log ind på serveren. Ret filnavnet og IP-adressen til dine egne:</p>
+        <div class="cmd only-win"><div class="bar"><span class="label">I PowerShell på din computer</span><button class="copy" type="button">Kopiér</button></div><pre>ssh -i $HOME\Downloads\ssh-key-XXXX.key ubuntu@DIN-IP</pre></div>
+        <div class="cmd only-mac"><div class="bar"><span class="label">I Terminal på din Mac</span><button class="copy" type="button">Kopiér</button></div><pre>chmod 600 ~/Downloads/ssh-key-XXXX.key
+ssh -i ~/Downloads/ssh-key-XXXX.key ubuntu@DIN-IP</pre></div>
+        <p>Svar <code>yes</code> første gang. Når du står på serveren, kører du denne ene kommando:</p>
+        <div class="cmd"><div class="bar"><span class="label">På serveren</span><button class="copy" type="button">Kopiér</button></div><pre>curl -fsSL https://raw.githubusercontent.com/jesperbagger/aula-huskeliste/main/scripts/install-server.sh | bash</pre></div>
+        <p>Til sidst viser scriptet tre oplysninger: <b>Connector-URL</b>, <b>Header-navn</b> og <b>Header-værdi</b>. Gem dem i din password manager. Du kan altid se dem igen med kommandoen <code>aula-connector</code>.</p>
+      </article>
+
+      <article class="step" id="trin-3">
+        <div class="num" aria-hidden="true">3</div>
+        <h3>Log ind med MitID <span class="time">ca. 5 min</span></h3>
+        <p>Aula tillader kun MitID-login fra almindelige hjemmeforbindelser. Du logger derfor ind fra din egen computer, og scriptet flytter login'et sikkert over på serveren bagefter.</p>
+        <div class="cmd only-win"><div class="bar"><span class="label">I PowerShell på din computer</span><button class="copy" type="button">Kopiér</button></div><pre>irm https://raw.githubusercontent.com/jesperbagger/aula-huskeliste/main/scripts/login-windows.ps1 | iex</pre></div>
+        <div class="cmd only-mac"><div class="bar"><span class="label">I Terminal på din Mac</span><button class="copy" type="button">Kopiér</button></div><pre>bash -c "$(curl -fsSL https://raw.githubusercontent.com/jesperbagger/aula-huskeliste/main/scripts/login-mac.sh)"</pre></div>
+        <p>Scriptet spørger om serverens IP-adresse og din SSH-nøgle. Derefter beder det om dit MitID-brugernavn ("MitID username") og viser en QR-kode, som du scanner med MitID-appen. Kopien af login'et på din computer slettes automatisk bagefter.</p>
+        <div class="callout">Du kører det samme script igen, hvis du en dag får mailen <b>"Aula-automation: kræver handling"</b>. Det betyder, at login'et er udløbet.</div>
+      </article>
+
+      <article class="step" id="trin-4">
+        <div class="num" aria-hidden="true">4</div>
+        <h3>Tilføj Aula i Claude <span class="time">ca. 5 min</span></h3>
+        <p>Gå til <a href="https://claude.ai">claude.ai</a> → <b>Indstillinger → Connectors → Add custom connector</b> og udfyld:</p>
+        <dl class="fields">
+          <dt>Navn</dt><dd><code>Aula</code></dd>
+          <dt>URL</dt><dd>Din Connector-URL fra trin 2</dd>
+          <dt>Authentication</dt><dd>No sign-in</dd>
+          <dt>Request headers</dt><dd>Vælg <b>X-API-Key</b> i listen og indsæt din Header-værdi. Findes den ikke, så vælg <b>Authorization</b> og skriv <code>Bearer </code> foran nøglen.</dd>
+        </dl>
+        <div class="callout">Skriv ikke dit eget header-navn. Custom header-navne kræver godkendelse fra Anthropic.</div>
+        <p>Tryk <b>Add</b>. Du skal nu se en liste med Aula-værktøjer. Sæt dem til <b>Always allow</b> i dropdown-menuen ud for "Other tools". De kan kun læse, ikke sende eller ændre noget i Aula.</p>
+      </article>
+
+      <article class="step" id="trin-5">
+        <div class="num" aria-hidden="true">5</div>
+        <h3>Opret de planlagte opgaver <span class="time">ca. 5 min</span></h3>
+        <ol>
+          <li>Kopiér opsætningsprompten med knappen herunder.</li>
+          <li>Start en ny opgave i <b>Claude Cowork</b> og indsæt teksten.</li>
+          <li>Claude finder dine børn i Aula, spørger om mailadresser og kalender og opretter opgaverne kl. 15.00 og 19.30.</li>
+          <li>Slå <b>Automatically approve</b> til på opgaverne, hvis Claude beder om det.</li>
+          <li>Sig ja til en testkørsel, og tjek din mail.</li>
+        </ol>
+        <div class="actions">
+          <button class="btn btn-primary" type="button" id="copy-prompt">Kopiér opsætningsprompten</button>
+          <a class="btn btn-ghost" href="https://github.com/jesperbagger/aula-huskeliste/blob/main/templates/opsaetning-prompt.md">Læs den først</a>
+        </div>
+        <textarea id="prompt-text" readonly hidden aria-hidden="true"><!--OPSAETNINGSPROMPT--></textarea>
+      </article>
+    </div>
+  </section>
+
+  <section id="drift">
+    <h2>Når det kører</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Situation</th><th>Det gør du</th></tr></thead>
+        <tbody>
+          <tr><td>Mailen "Aula-automation: kræver handling"</td><td>Kør login-scriptet fra trin 3 igen hjemmefra.</td></tr>
+          <tr><td>Du vil se, om alt kører</td><td>Log ind på serveren og skriv <code>aula-status</code>.</td></tr>
+          <tr><td>Du har glemt connector-oplysningerne</td><td>Skriv <code>aula-connector</code> på serveren.</td></tr>
+          <tr><td>Ny version af projektet</td><td>Kør installationskommandoen fra trin 2 igen. Dine indstillinger bevares.</td></tr>
+          <tr><td>Noget virker ikke</td><td>Se <a href="https://github.com/jesperbagger/aula-huskeliste/blob/main/docs/fejlsoegning.md">fejlsøgningen</a>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">Oracle kan tage gratis maskiner tilbage, hvis de bruger meget lidt CPU og netværk i en uge, og det gør denne. Mange brugere undgår det ved at opgradere kontoen til <em>Pay As You Go</em>. Always Free-ressourcer koster stadig 0 kr. Opret samtidig en budget-alarm på fx 1 USD.</div>
+  </section>
+
+  <section id="privatliv">
+    <h2>Privatliv og ansvar</h2>
+    <div class="cols">
+      <div>
+        <h3>Sådan passes der på dine data</h3>
+        <ul>
+          <li>Dit Aula-login ligger krypteret på <b>din egen server</b>. Udvikleren af projektet har ingen adgang.</li>
+          <li>Serveren kan kun nås med en hemmelig adresse <b>og</b> en hemmelig nøgle.</li>
+          <li>Kun læseadgang: der kan ikke sendes beskeder eller ændres noget i Aula.</li>
+          <li>Tråde, som Aula har markeret som følsomme, åbnes aldrig.</li>
+          <li>Den fælles mail genfortæller aldrig personlige samtaler, og kontaktbogen går kun til dig.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Vigtigt at vide</h3>
+        <ul>
+          <li><b>Uofficielt:</b> aula-mcp bruger Aulas interne API. Aula kan ændre det, så løsningen holder op med at virke i en periode.</li>
+          <li><b>Claude læser indholdet</b> af beskeder og opslag, når opgaverne kører. Det er dit valg, om du er tryg ved det.</li>
+          <li><b>Ingen garanti:</b> tjek altid Aula selv ved vigtige ting.</li>
+        </ul>
+        <p>Læs mere i <a href="https://github.com/jesperbagger/aula-huskeliste/blob/main/SIKKERHED.md">SIKKERHED.md</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Bygget oven på <a href="https://github.com/Casperjuel/aula-mcp">aula-mcp</a> af Casper Juel, som selv bygger videre på <a href="https://github.com/scaarup/aula">scaarup/aula</a>. Tak.</p>
+    <p>Aula-huskeliste er open source under MIT-licens · <a href="https://github.com/jesperbagger/aula-huskeliste">github.com/jesperbagger/aula-huskeliste</a></p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var wrap = document.getElementById('top');
+  var buttons = document.querySelectorAll('[data-os-btn]');
+
+  function setOs(os, remember) {
+    wrap.setAttribute('data-os', os);
+    buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-os-btn') === os)); });
+    if (remember) { try { localStorage.setItem('aula-huskeliste-os', os); } catch (e) {} }
+  }
+
+  var saved = null;
+  try { saved = localStorage.getItem('aula-huskeliste-os'); } catch (e) {}
+  var guess = /Mac|iPhone|iPad/i.test(navigator.userAgent) ? 'mac' : 'win';
+  setOs(saved === 'mac' || saved === 'win' ? saved : guess, false);
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () { setOs(b.getAttribute('data-os-btn'), true); });
+  });
+
+  function copyText(text, button, doneLabel) {
+    var original = button.textContent;
+    function done(ok) {
+      button.textContent = ok ? doneLabel : 'Markér og kopiér selv';
+      button.classList.toggle('done', ok);
+      setTimeout(function () { button.textContent = original; button.classList.remove('done'); }, 2200);
+    }
+    try {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+    } catch (e) { done(false); }
+  }
+
+  document.querySelectorAll('.cmd .copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var pre = btn.closest('.cmd').querySelector('pre');
+      copyText(pre.textContent, btn, 'Kopieret');
+      if (!navigator.clipboard) {
+        var range = document.createRange(); range.selectNodeContents(pre);
+        var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      }
+    });
+  });
+
+  var promptBtn = document.getElementById('copy-prompt');
+  var promptText = document.getElementById('prompt-text');
+  promptBtn.addEventListener('click', function () {
+    copyText(promptText.value, promptBtn, 'Kopieret – indsæt i Claude Cowork');
+  });
+})();
+</script>
