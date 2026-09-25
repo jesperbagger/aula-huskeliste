@@ -1,0 +1,142 @@
+# Bygger aula-programmerne direkte fra kildekoden i Casperjuel/aula-mcp og
+# udgiver dem som en GitHub-release. Installations- og login-scripts henter
+# altid filerne fra den nyeste release.
+#
+# Kør manuelt: Actions > "Byg og udgiv" > Run workflow.
+name: Byg og udgiv
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versionsnummer for udgivelsen (fx v1.0.0)"
+        required: true
+        default: "v1.0.0"
+      aula_mcp_ref:
+        description: "aula-mcp commit eller tag, der bygges fra"
+        required: true
+        default: "f1360000eaccf7cae528bed1cab6b0d0b2a32cfc"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      AULA_MCP_REF: ${{ inputs.aula_mcp_ref }}
+    outputs:
+      aula_mcp_sha: ${{ steps.upstream.outputs.sha }}
+      aula_mcp_version: ${{ steps.upstream.outputs.version }}
+    steps:
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.13"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "11.1.3"
+
+      - name: Hent aula-mcp
+        id: upstream
+        run: |
+          git clone https://github.com/Casperjuel/aula-mcp.git upstream
+          cd upstream
+          git checkout "$AULA_MCP_REF"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+          pnpm install --frozen-lockfile
+
+      - name: Gør PDF-læsning mulig i den kompilerede server
+        working-directory: upstream
+        run: |
+          # pdf.js (via pdf-parse) kan ikke finde sin worker eller DOMMatrix inde i en
+          # kompileret binær fil. Et lille indgangsscript sørger for begge dele.
+          worker=$(find "$PWD/node_modules/.pnpm" -path '*pdfjs-dist/legacy/build/pdf.worker.mjs' | head -n 1)
+          test -n "$worker"
+          cat > packages/mcp-server/src/compiled-entry.ts <<EOF
+          (globalThis as any).DOMMatrix ??= class { a = 1; b = 0; c = 0; d = 1; e = 0; f = 0; };
+          (globalThis as any).pdfjsWorker = await import('$worker');
+          await import('./server.ts');
+          EOF
+          cat packages/mcp-server/src/compiled-entry.ts
+
+      - name: Byg programmer
+        working-directory: upstream
+        run: |
+          mkdir -p ../dist
+          cli=apps/cli/src/index.ts
+          srv=packages/mcp-server/src/compiled-entry.ts
+          # x64 bygges som "baseline", så det også virker på ældre/billige CPU'er uden AVX2.
+          bun build --compile --target=bun-windows-x64-baseline --outfile ../dist/aula-windows-x64.exe "$cli"
+          bun build --compile --target=bun-darwin-arm64         --outfile ../dist/aula-macos-arm64     "$cli"
+          bun build --compile --target=bun-darwin-x64-baseline  --outfile ../dist/aula-macos-x64       "$cli"
+          bun build --compile --target=bun-linux-x64-baseline   --outfile ../dist/aula-linux-x64       "$cli"
+          bun build --compile --target=bun-linux-arm64          --outfile ../dist/aula-linux-arm64     "$cli"
+          bun build --compile --target=bun-linux-x64-baseline   --outfile ../dist/aula-mcp-linux-x64   "$srv"
+          bun build --compile --target=bun-linux-arm64          --outfile ../dist/aula-mcp-linux-arm64 "$srv"
+          cp LICENSE ../dist/aula-mcp-LICENSE.txt
+
+      - name: Test
+        run: |
+          ./dist/aula-linux-x64 --help | head -n 3
+          AULA_MCP_DIR="$(mktemp -d)" AULA_MCP_PORT=17878 ./dist/aula-mcp-linux-x64 &
+          pid=$!
+          sleep 3
+          curl -fsS http://127.0.0.1:17878/healthz
+          echo
+          # PDF-læsning gennem MCP
+          echo 'JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCAyMDAgMjAwXSAvQ29udGVudHMgNCAwIFIgL1Jlc291cmNlcyA8PCAvRm9udCA8PCAvRjEgNSAwIFIgPj4gPj4gPj4KZW5kb2JqCjQgMCBvYmoKPDwgL0xlbmd0aCA0NCA+PgpzdHJlYW0KQlQgL0YxIDEyIFRmIDIwIDEwMCBUZCAoSGVqIEF1bGEgdGVzdCkgVGogRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8IC9UeXBlIC9Gb250IC9TdWJ0eXBlIC9UeXBlMSAvQmFzZUZvbnQgL0hlbHZldGljYSA+PgplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAowMDAwMDAwMjQxIDAwMDAwIG4gCjAwMDAwMDAzMzUgMDAwMDAgbiAKdHJhaWxlcgo8PCAvU2l6ZSA2IC9Sb290IDEgMCBSID4+CnN0YXJ0eHJlZgo0MDUKJSVFT0YK' | base64 -d > /tmp/test.pdf
+          url=http://127.0.0.1:17878/mcp
+          sid=$(curl -fsS -D - -o /dev/null -X POST "$url" -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+            -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' \
+            | grep -i mcp-session-id | awk '{print $2}' | tr -d '\r')
+          curl -fsS -o /dev/null -X POST "$url" -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -H "Mcp-Session-Id: $sid" \
+            -d '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+          result=$(curl -fsS -X POST "$url" -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -H "Mcp-Session-Id: $sid" \
+            -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"aula.utils.extract_pdf_text","arguments":{"path":"/tmp/test.pdf"}}}')
+          echo "$result"
+          echo "$result" | grep -q "Hej Aula test"
+          kill "$pid"
+
+      - name: Kontrolsummer
+        working-directory: dist
+        run: sha256sum * > SHA256SUMS && cat SHA256SUMS
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.version }}
+          name: ${{ inputs.version }}
+          make_latest: "true"
+          body: |
+            Programmerne er bygget automatisk fra kildekoden i [Casperjuel/aula-mcp](https://github.com/Casperjuel/aula-mcp) version ${{ needs.build.outputs.aula_mcp_version }} (commit `${{ needs.build.outputs.aula_mcp_sha }}`) af denne GitHub Action. Byggeloggen kan ses under fanen Actions.
+
+            | Fil | Bruges til |
+            |---|---|
+            | `aula-mcp-linux-x64` / `aula-mcp-linux-arm64` | Serveren (installeres af `install-server.sh`) |
+            | `aula-linux-*` | Hjælpeprogram på serveren (import af login, status) |
+            | `aula-windows-x64.exe` | MitID-login fra Windows (`login-windows.ps1`) |
+            | `aula-macos-arm64` / `aula-macos-x64` | MitID-login fra Mac (`login-mac.sh`) – kræver macOS 13 eller nyere |
+            | `SHA256SUMS` | Kontrolsummer, som scriptsene tjekker automatisk |
+
+            aula-mcp er udgivet under MIT-licens af Casper Juel, se `aula-mcp-LICENSE.txt`.
+          files: dist/*
